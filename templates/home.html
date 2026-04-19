@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marketplace</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="layout">
+
+    <div class="sidebar">
+        <a href="/add" class="btn full-btn">+ Add Item</a>
+
+        <h3>Category</h3>
+        <a href="/">All</a>
+        <a href="/?category=Books">Books</a>
+        <a href="/?category=Electronics">Electronics</a>
+        <a href="/?category=Clothes">Clothes</a>
+        <a href="/?category=Others">Others</a>
+
+        <h3>Sort by Price</h3>
+        <a href="/?sort=low">Low to High</a>
+        <a href="/?sort=high">High to Low</a>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            {% for item in items %}
+            <a href="/item/{{ item.id }}" class="card-link">
+                <div class="card">
+                    <img src="/static/uploads/{{ item.image }}" class="item-img">
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.category }}</p>
+                    <p class="price">₹{{ item.price }}</p>
+
+                    <div class="tag-box">
+                        {% for tag in item.tags.split() %}
+                        <span class="tag">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
