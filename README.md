@@ -14,7 +14,7 @@ It helps students connect easily and exchange products like books, clothes, elec
     <li>Contact seller directly</li>
 </ul>
 
-<h2>🛠 Tech Stack</h2>
+<h2>Tech Stack</h2>
 <ul>
     <li>HTML, CSS</li>
     <li>Python</li>
