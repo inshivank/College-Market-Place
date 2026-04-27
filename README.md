@@ -4,6 +4,7 @@
 <p>
 College Marketplace is a web-based platform that allows students to buy, sell, or give away items within their campus.
 It helps students connect easily and exchange products like books, clothes, electronics, etc., in a simple and organized way.
+It has used KNN MODEL, using TV-IDF feature extraction technique forming a content recommendation model.  
 </p>
 
 <h2>Features</h2>
