@@ -7,13 +7,13 @@ import os
 
 app = Flask(__name__)
 
-# ---------------- CONFIG ----------------
+# CONFIG 
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 categories = ["Books", "Electronics", "Clothes", "Others"]
 
-# ---------------- DATA ----------------
+# DATA 
 items = [
     {"id": 1, "name": "Math Book", "category": "Books", "price": 200, "tags": "book study education"},
     {"id": 2, "name": "Physics Book", "category": "Books", "price": 300, "tags": "book science study"},
@@ -68,7 +68,7 @@ items = [
 ]
 
 
-# ---------------- HELPER FUNCTIONS ----------------
+# HELPER FUNCTIONS 
 
 def clean_tags(raw_tags):
     return raw_tags.replace("#", "").lower()
@@ -82,10 +82,13 @@ def save_image(file):
     return "default.png"
 
 
-# ---------------- ML PIPELINE ----------------
+# PIPELINE 
 
 def extract_features(items):
     # TEXT FEATURES (TF-IDF)
+    # What TF-IDF does:
+    # Breaks tags into words
+    # Assigns importance to each word
     tags = [item["tags"] for item in items]
     vectorizer = TfidfVectorizer()
     text_features = vectorizer.fit_transform(tags).toarray()
@@ -119,8 +122,9 @@ def get_recommendations(items, selected_index):
     return [items[i] for i in recommended_indices]
 
 
-# ---------------- ROUTES ----------------
-
+# ROUTES 
+# Filters by category
+# Sorts by price
 @app.route('/')
 def home():
     filtered_items = items.copy()
@@ -139,6 +143,14 @@ def home():
 
 
 @app.route('/add', methods=['GET', 'POST'])
+
+
+# Takes form input:
+# name
+# category
+# price
+# tags
+# image
 def add_item():
     if request.method == 'POST':
         name = request.form['name']
@@ -193,7 +205,7 @@ def view_item(item_id):
     return render_template('item.html', item=items[selected_index], recommended=recommended_items)
 
 
-# ---------------- RUN ----------------
+# RUN 
 
 if __name__ == '__main__':
     app.run(debug=True)
