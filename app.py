@@ -1,15 +1,19 @@
 from flask import Flask, render_template, request, redirect
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import MinMaxScaler
+import numpy as np
 import os
 
 app = Flask(__name__)
 
+# ---------------- CONFIG ----------------
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 categories = ["Books", "Electronics", "Clothes", "Others"]
 
+# ---------------- DATA ----------------
 items = [
     {"id": 1, "name": "Math Book", "category": "Books", "price": 200, "tags": "book study education"},
     {"id": 2, "name": "Physics Book", "category": "Books", "price": 300, "tags": "book science study"},
@@ -63,7 +67,60 @@ items = [
     {"id": 50, "name": "Bean Bag", "category": "Others", "price": 2500, "tags": "comfort furniture"}
 ]
 
-# HOME (with filter + sort)
+
+# ---------------- HELPER FUNCTIONS ----------------
+
+def clean_tags(raw_tags):
+    return raw_tags.replace("#", "").lower()
+
+
+def save_image(file):
+    if file and file.filename:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        return file.filename
+    return "default.png"
+
+
+# ---------------- ML PIPELINE ----------------
+
+def extract_features(items):
+    # TEXT FEATURES (TF-IDF)
+    tags = [item["tags"] for item in items]
+    vectorizer = TfidfVectorizer()
+    text_features = vectorizer.fit_transform(tags).toarray()
+
+    # NUMERIC FEATURE (PRICE)
+    prices = np.array([item["price"] for item in items]).reshape(-1, 1)
+    scaler = MinMaxScaler()
+    price_features = scaler.fit_transform(prices)
+
+    # COMBINE FEATURES
+    features = np.hstack((text_features, price_features))
+
+    return features
+
+
+def train_knn_model(features):
+    model = NearestNeighbors(n_neighbors=4, metric='euclidean')
+    model.fit(features)
+    return model
+
+
+def get_recommendations(items, selected_index):
+    features = extract_features(items)
+    model = train_knn_model(features)
+
+    distances, indices = model.kneighbors([features[selected_index]])
+
+    # Skip itself
+    recommended_indices = indices[0][1:]
+
+    return [items[i] for i in recommended_indices]
+
+
+# ---------------- ROUTES ----------------
+
 @app.route('/')
 def home():
     filtered_items = items.copy()
@@ -80,23 +137,17 @@ def home():
 
     return render_template('home.html', items=filtered_items)
 
-# ADD
+
 @app.route('/add', methods=['GET', 'POST'])
 def add_item():
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
         price = int(request.form['price'])
-        tags = request.form['tags'].replace("#", "").lower()
+        tags = clean_tags(request.form['tags'])
 
         image_file = request.files['image']
-        filename = image_file.filename
-
-        if filename:
-            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image_file.save(path)
-        else:
-            filename = "default.png"
+        filename = save_image(image_file)
 
         items.append({
             "id": len(items) + 1,
@@ -111,7 +162,7 @@ def add_item():
 
     return render_template('add.html', categories=categories)
 
-# EDIT
+
 @app.route('/edit/<int:item_id>', methods=['GET', 'POST'])
 def edit_item(item_id):
 
@@ -121,37 +172,28 @@ def edit_item(item_id):
         item["name"] = request.form['name']
         item["category"] = request.form['category']
         item["price"] = int(request.form['price'])
-        item["tags"] = request.form['tags'].replace("#", "").lower()
+        item["tags"] = clean_tags(request.form['tags'])
 
         image_file = request.files['image']
         if image_file.filename:
-            path = os.path.join(app.config['UPLOAD_FOLDER'], image_file.filename)
-            image_file.save(path)
-            item["image"] = image_file.filename
+            item["image"] = save_image(image_file)
 
         return redirect(f'/item/{item_id}')
 
     return render_template('edit.html', item=item, categories=categories)
 
-# ITEM + ML
+
 @app.route('/item/<int:item_id>')
 def view_item(item_id):
 
     selected_index = next(i for i, item in enumerate(items) if item["id"] == item_id)
 
-    tag_list = [item["tags"] for item in items]
+    recommended_items = get_recommendations(items, selected_index)
 
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(tag_list)
+    return render_template('item.html', item=items[selected_index], recommended=recommended_items)
 
-    similarity = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-    scores = list(enumerate(similarity[selected_index]))
-    scores = sorted(scores, key=lambda x: x[1], reverse=True)
-
-    recommended = [items[i[0]] for i in scores[1:4]]
-
-    return render_template('item.html', item=items[selected_index], recommended=recommended)
+# ---------------- RUN ----------------
 
 if __name__ == '__main__':
     app.run(debug=True)
