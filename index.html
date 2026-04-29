@@ -1,94 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A static college marketplace with TF-IDF and cosine similarity recommendations.">
     <title>College Marketplace</title>
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="./static/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<div class="layout">
-
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-
-        <a href="#" class="btn full-btn">+ Add Item</a>
-
-        <h3>Category</h3>
-        <a href="#">All</a>
-        <a href="#">Books</a>
-        <a href="#">Electronics</a>
-        <a href="#">Clothes</a>
-        <a href="#">Others</a>
-
-        <h3>Sort by Price</h3>
-        <a href="#">Low to High</a>
-        <a href="#">High to Low</a>
-
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
-
-        <div class="container">
-
-            <!-- ITEM 1 -->
-            <div class="card">
-                <img src="./static/uploads/default.png" class="item-img">
-                <h3>Math Book</h3>
-                <p>Books</p>
-                <p class="price">₹200</p>
-                <div class="tag-box">
-                    <span class="tag">#book</span>
-                    <span class="tag">#study</span>
-                    <span class="tag">#education</span>
-                </div>
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-mark">CM</span>
+            <div>
+                <h1>College Marketplace</h1>
+                <p>Find campus items and get smart recommendations.</p>
             </div>
-
-            <!-- ITEM 2 -->
-            <div class="card">
-                <img src="./static/uploads/default.png" class="item-img">
-                <h3>Laptop</h3>
-                <p>Electronics</p>
-                <p class="price">₹40000</p>
-                <div class="tag-box">
-                    <span class="tag">#electronics</span>
-                    <span class="tag">#coding</span>
-                </div>
-            </div>
-
-            <!-- ITEM 3 -->
-            <div class="card">
-                <img src="./static/uploads/default.png" class="item-img">
-                <h3>Headphones</h3>
-                <p>Electronics</p>
-                <p class="price">₹1500</p>
-                <div class="tag-box">
-                    <span class="tag">#audio</span>
-                    <span class="tag">#music</span>
-                </div>
-            </div>
-
-            <!-- ITEM 4 -->
-            <div class="card">
-                <img src="./static/uploads/default.png" class="item-img">
-                <h3>T-Shirt</h3>
-                <p>Clothes</p>
-                <p class="price">₹500</p>
-                <div class="tag-box">
-                    <span class="tag">#fashion</span>
-                    <span class="tag">#casual</span>
-                </div>
-            </div>
-
         </div>
 
-    </div>
+        <button class="primary-button" id="showAddFormBtn" type="button">+ Add Item</button>
 
-</div>
+        <section class="filter-panel" aria-label="Category filters">
+            <h2>Category</h2>
+            <button class="filter-btn active" type="button" data-category="All">All Items</button>
+            <button class="filter-btn" type="button" data-category="Books">Books</button>
+            <button class="filter-btn" type="button" data-category="Electronics">Electronics</button>
+            <button class="filter-btn" type="button" data-category="Clothes">Clothes</button>
+            <button class="filter-btn" type="button" data-category="Others">Others</button>
+        </section>
 
+    </aside>
+
+    <main class="main-content">
+        <div id="browseView">
+            <section class="hero">
+                <div>
+                    <p class="eyebrow">College Marketplace</p>
+                    <h2>Campus buying, selling, and smart item discovery.</h2>
+                    <p class="hero-copy">Browse useful student items, add your own listing, and get similar recommendations instantly.</p>
+                </div>
+            </section>
+
+            <section class="toolbar" aria-label="Search and sorting tools">
+                <label class="search-box">
+                    Search items
+                    <input type="search" id="searchInput" placeholder="Search by name, tag, or category">
+                </label>
+                <label>
+                    Sort
+                    <select id="sortSelect">
+                        <option value="default">Default</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="name">Name: A to Z</option>
+                    </select>
+                </label>
+                <button class="secondary-button" id="resetDataBtn" type="button">Reset Demo Data</button>
+            </section>
+
+            <section class="add-panel hidden" id="addPanel" aria-label="Add new item">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">LocalStorage</p>
+                        <h2>Add a New Item</h2>
+                    </div>
+                </div>
+                <form id="addItemForm">
+                    <div class="form-grid">
+                        <label>
+                            Item Name
+                            <input type="text" id="itemName" required placeholder="Example: Data Structures Book">
+                        </label>
+                        <label>
+                            Price
+                            <input type="number" id="itemPrice" required min="0" placeholder="350">
+                        </label>
+                        <label>
+                            Category
+                            <select id="itemCategory" required>
+                                <option>Books</option>
+                                <option>Electronics</option>
+                                <option>Clothes</option>
+                                <option>Others</option>
+                            </select>
+                        </label>
+                        <label>
+                            Image URL or Path
+                            <input type="text" id="itemImage" placeholder="https://example.com/item.jpg">
+                        </label>
+                        <label>
+                            Upload Image
+                            <input type="file" id="itemImageFile" accept="image/*">
+                        </label>
+                    </div>
+                    <label>
+                        Tags
+                        <input type="text" id="itemTags" required placeholder="book study coding">
+                    </label>
+                <div class="form-actions">
+                    <button class="primary-button" type="submit">Save Item</button>
+                    <button class="secondary-button" id="cancelAddBtn" type="button">Cancel</button>
+                </div>
+                <p class="form-note">On GitHub Pages, added items are saved in this browser using localStorage.</p>
+            </form>
+        </section>
+
+            <section class="list-header">
+                <div>
+                    <p class="eyebrow">Marketplace Items</p>
+                    <h2>Browse Items</h2>
+                </div>
+                <p class="result-count" id="resultCount"></p>
+            </section>
+
+            <section class="items-grid" id="itemsGrid" aria-label="Marketplace items"></section>
+            <p class="empty-state hidden" id="emptyState">No items found. Try another search or category.</p>
+        </div>
+
+        <section class="detail-view hidden" id="detailView" aria-label="Item details">
+            <button class="back-button" id="backToItemsBtn" type="button">Back to items</button>
+            <div class="detail-shell" id="detailShell"></div>
+
+            <section class="add-panel hidden" id="editPanel" aria-label="Edit item">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Edit Listing</p>
+                        <h2>Update Item Details</h2>
+                    </div>
+                </div>
+                <form id="editItemForm">
+                    <div class="form-grid">
+                        <label>
+                            Item Name
+                            <input type="text" id="editItemName" required>
+                        </label>
+                        <label>
+                            Price
+                            <input type="number" id="editItemPrice" required min="0">
+                        </label>
+                        <label>
+                            Category
+                            <select id="editItemCategory" required>
+                                <option>Books</option>
+                                <option>Electronics</option>
+                                <option>Clothes</option>
+                                <option>Others</option>
+                            </select>
+                        </label>
+                        <label>
+                            Image URL or Path
+                            <input type="text" id="editItemImage">
+                        </label>
+                        <label>
+                            Upload New Image
+                            <input type="file" id="editItemImageFile" accept="image/*">
+                        </label>
+                    </div>
+                    <label>
+                        Tags
+                        <input type="text" id="editItemTags" required>
+                    </label>
+                    <div class="form-actions">
+                        <button class="primary-button" type="submit">Save Changes</button>
+                        <button class="secondary-button" id="cancelEditBtn" type="button">Cancel</button>
+                    </div>
+                    <p class="form-note">Image uploads and edits are saved locally in this browser.</p>
+                </form>
+            </section>
+
+            <section class="recommendation-section">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Similar Items</p>
+                        <h2 id="selectedTitle">Recommended Items</h2>
+                    </div>
+                    <p id="selectedTags" class="selected-tags"></p>
+                </div>
+                <div class="items-grid compact" id="recommendationsGrid"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
 </body>
 </html>
