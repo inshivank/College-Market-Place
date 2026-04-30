@@ -1,4 +1,8 @@
 const STORAGE_KEY = "collegeMarketplaceItems";
+const PROFILE_KEY = "collegeMarketplaceProfile";
+const WISHLIST_KEY = "collegeMarketplaceWishlist";
+const RECENT_KEY = "collegeMarketplaceRecent";
+const KNN_NEIGHBORS = 8;
 
 const placeholderImages = {
     Books: svgImage("#0f766e", "#ccfbf1", "BOOK"),
@@ -109,6 +113,9 @@ const defaultItems = [
 let items = loadItems();
 let activeCategory = "All";
 let selectedItemId = null;
+let wishlistIds = loadIdList(WISHLIST_KEY);
+let recentlyViewedIds = loadIdList(RECENT_KEY);
+let userProfile = loadProfile();
 
 const itemsGrid = document.getElementById("itemsGrid");
 const recommendationsGrid = document.getElementById("recommendationsGrid");
@@ -119,6 +126,8 @@ const addPanel = document.getElementById("addPanel");
 const addItemForm = document.getElementById("addItemForm");
 const searchInput = document.getElementById("searchInput");
 const sortSelect = document.getElementById("sortSelect");
+const minPriceInput = document.getElementById("minPriceInput");
+const maxPriceInput = document.getElementById("maxPriceInput");
 const emptyState = document.getElementById("emptyState");
 const browseView = document.getElementById("browseView");
 const detailView = document.getElementById("detailView");
@@ -132,6 +141,18 @@ const editItemCategory = document.getElementById("editItemCategory");
 const editItemImage = document.getElementById("editItemImage");
 const editItemImageFile = document.getElementById("editItemImageFile");
 const editItemTags = document.getElementById("editItemTags");
+const editItemSeller = document.getElementById("editItemSeller");
+const editItemSellerEmail = document.getElementById("editItemSellerEmail");
+const editItemSellerPhone = document.getElementById("editItemSellerPhone");
+const profileName = document.getElementById("profileName");
+const profileRoll = document.getElementById("profileRoll");
+const profileStatus = document.getElementById("profileStatus");
+const wishlistList = document.getElementById("wishlistList");
+const recentList = document.getElementById("recentList");
+
+profileName.value = userProfile.name || "";
+profileRoll.value = userProfile.roll || "";
+updateProfileStatus();
 
 document.getElementById("showAddFormBtn").addEventListener("click", () => {
     goToBrowseView();
@@ -146,10 +167,21 @@ document.getElementById("cancelAddBtn").addEventListener("click", () => {
 
 document.getElementById("resetDataBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(WISHLIST_KEY);
+    localStorage.removeItem(RECENT_KEY);
     items = cloneDefaultItems();
+    wishlistIds = [];
+    recentlyViewedIds = [];
     selectedItemId = null;
+    searchInput.value = "";
+    minPriceInput.value = "";
+    maxPriceInput.value = "";
+    sortSelect.value = "default";
+    activeCategory = "All";
+    updateActiveFilter();
     goToBrowseView();
     renderItems();
+    renderSideLists();
 });
 
 searchInput.addEventListener("input", () => {
@@ -159,6 +191,17 @@ searchInput.addEventListener("input", () => {
 });
 
 sortSelect.addEventListener("change", renderItems);
+minPriceInput.addEventListener("input", renderItems);
+maxPriceInput.addEventListener("input", renderItems);
+
+document.getElementById("saveProfileBtn").addEventListener("click", () => {
+    userProfile = {
+        name: profileName.value.trim(),
+        roll: profileRoll.value.trim()
+    };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile));
+    updateProfileStatus();
+});
 
 document.querySelectorAll(".filter-btn").forEach((button) => {
     button.addEventListener("click", () => {
@@ -178,6 +221,9 @@ addItemForm.addEventListener("submit", async (event) => {
     const imageFile = document.getElementById("itemImageFile").files[0];
     const cleanName = document.getElementById("itemName").value.trim();
     const cleanItemTags = cleanTags(document.getElementById("itemTags").value);
+    const seller = document.getElementById("itemSeller").value.trim() || userProfile.name || "Campus Seller";
+    const sellerEmail = document.getElementById("itemSellerEmail").value.trim();
+    const sellerPhone = document.getElementById("itemSellerPhone").value.trim();
 
     if (!cleanName || !cleanItemTags) {
         return;
@@ -189,7 +235,10 @@ addItemForm.addEventListener("submit", async (event) => {
         category,
         price: Number(document.getElementById("itemPrice").value),
         tags: cleanItemTags,
-        image: await getImageValue(imageFile, imageInput, category)
+        image: await getImageValue(imageFile, imageInput, category),
+        seller,
+        sellerEmail,
+        sellerPhone
     };
 
     items.push(newItem);
@@ -205,6 +254,7 @@ addItemForm.addEventListener("submit", async (event) => {
 
 renderItems();
 handleRoute();
+renderSideLists();
 
 window.addEventListener("hashchange", handleRoute);
 backToItemsBtn.addEventListener("click", goToBrowseView);
@@ -238,11 +288,15 @@ editItemForm.addEventListener("submit", async (event) => {
     item.category = category;
     item.tags = cleanItemTags;
     item.image = await getImageValue(editItemImageFile.files[0], editItemImage.value.trim(), category, item.image);
+    item.seller = editItemSeller.value.trim() || "Campus Seller";
+    item.sellerEmail = editItemSellerEmail.value.trim();
+    item.sellerPhone = editItemSellerPhone.value.trim();
 
     saveItems();
     editPanel.classList.add("hidden");
     editItemForm.reset();
     renderItemPage(selectedItemId);
+    renderSideLists();
 });
 
 function renderItems() {
@@ -257,12 +311,15 @@ function renderItems() {
 
 function getVisibleItems() {
     const query = cleanTags(searchInput.value);
+    const minPrice = Number(minPriceInput.value) || 0;
+    const maxPrice = maxPriceInput.value === "" ? Infinity : Number(maxPriceInput.value);
 
     let visibleItems = items.filter((item) => {
         const categoryMatch = activeCategory === "All" || item.category === activeCategory;
         const searchableText = cleanTags(`${item.name} ${item.category} ${item.tags}`);
         const searchMatch = !query || searchableText.includes(query);
-        return categoryMatch && searchMatch;
+        const priceMatch = Number(item.price) >= minPrice && Number(item.price) <= maxPrice;
+        return categoryMatch && searchMatch && priceMatch;
     });
 
     if (sortSelect.value === "price-low") {
@@ -316,21 +373,29 @@ function renderItemPage(itemId) {
         return;
     }
 
-    const recommendedItems = getRecommendations(itemId, 3);
+    const recommendedItems = getRecommendations(itemId, KNN_NEIGHBORS);
 
+    addRecentlyViewed(itemId);
     browseView.classList.add("hidden");
     detailView.classList.remove("hidden");
     detailShell.innerHTML = createDetailPage(selectedItem);
     detailShell.querySelector("#editItemBtn").addEventListener("click", () => {
         openEditForm(selectedItem);
     });
+    detailShell.querySelector("#deleteItemBtn").addEventListener("click", () => {
+        deleteItem(selectedItem.id);
+    });
+    detailShell.querySelector("#detailWishlistBtn").addEventListener("click", () => {
+        toggleWishlist(selectedItem.id);
+        renderItemPage(selectedItem.id);
+    });
     bindImageFallbacks(detailShell);
 
     selectedTitle.textContent = `More like ${selectedItem.name}`;
     selectedTags.textContent = `Tags: ${selectedItem.tags}`;
 
-    recommendationsGrid.innerHTML = recommendedItems.map(({ item, score }) => {
-        return createItemCard(item, score);
+    recommendationsGrid.innerHTML = recommendedItems.map(({ item, score, matchingTags }) => {
+        return createItemCard(item, score, matchingTags);
     }).join("");
     bindCardClicks(recommendationsGrid);
     bindImageFallbacks(recommendationsGrid);
@@ -343,6 +408,12 @@ function createDetailPage(item) {
         .map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`)
         .join("");
 
+    const isWishlisted = wishlistIds.includes(item.id);
+    const seller = item.seller || "Campus Seller";
+    const sellerEmail = item.sellerEmail || "Not provided";
+    const sellerPhone = item.sellerPhone || "";
+    const whatsappHref = createWhatsAppHref(sellerPhone, item);
+
     return `
         <article class="item-detail-card">
             <div class="detail-image-wrap">
@@ -352,8 +423,18 @@ function createDetailPage(item) {
                 <span class="category" data-category="${escapeAttribute(item.category)}">${escapeHtml(item.category)}</span>
                 <h2>${escapeHtml(item.name)}</h2>
                 <p class="detail-price">Rs. ${Number(item.price).toLocaleString("en-IN")}</p>
+                <div class="seller-box">
+                    <p><strong>Seller:</strong> ${escapeHtml(seller)}</p>
+                    <p><strong>Email:</strong> ${escapeHtml(sellerEmail)}</p>
+                    <p><strong>Phone:</strong> ${escapeHtml(sellerPhone || "Not provided")}</p>
+                </div>
                 <div class="detail-tags">${tagHtml}</div>
-                <button class="primary-button detail-edit-button" id="editItemBtn" type="button">Edit Item</button>
+                <div class="detail-actions">
+                    <button class="primary-button detail-edit-button" id="editItemBtn" type="button">Edit Item</button>
+                    <button class="secondary-button" id="detailWishlistBtn" type="button">${isWishlisted ? "Remove Wishlist" : "Add Wishlist"}</button>
+                    <button class="danger-button" id="deleteItemBtn" type="button">Delete Item</button>
+                    ${whatsappHref ? `<a class="contact-button" href="${escapeAttribute(whatsappHref)}" target="_blank" rel="noopener">Contact Seller</a>` : ""}
+                </div>
             </div>
         </article>
     `;
@@ -366,6 +447,9 @@ function openEditForm(item) {
     editItemImage.value = item.image.startsWith("data:image/svg+xml") ? "" : item.image;
     editItemImageFile.value = "";
     editItemTags.value = item.tags;
+    editItemSeller.value = item.seller || "";
+    editItemSellerEmail.value = item.sellerEmail || "";
+    editItemSellerPhone.value = item.sellerPhone || "";
     editPanel.classList.remove("hidden");
     editItemName.focus();
 }
@@ -407,6 +491,13 @@ function bindCardClicks(container) {
             }
         });
     });
+
+    container.querySelectorAll(".wishlist-card-btn").forEach((button) => {
+        button.addEventListener("click", (event) => {
+            event.stopPropagation();
+            toggleWishlist(Number(button.dataset.id));
+        });
+    });
 }
 
 function bindImageFallbacks(container) {
@@ -417,14 +508,23 @@ function bindImageFallbacks(container) {
     });
 }
 
-function createItemCard(item, score = null) {
+function createItemCard(item, score = null, matchingTags = []) {
     const selectedClass = item.id === selectedItemId ? " selected" : "";
     const tagHtml = tokenize(item.tags)
         .map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`)
         .join("");
+    const matchingTagsHtml = matchingTags.length === 0
+        ? ""
+        : `
+            <div class="match-box">
+                <strong>Matched Tags</strong>
+                <div>${matchingTags.map((tag) => `<span>#${escapeHtml(tag)}</span>`).join("")}</div>
+            </div>
+        `;
     const scoreHtml = score === null
         ? ""
-        : `<div class="score">Similarity Score: ${score.toFixed(3)}</div>`;
+        : `<div class="score">Similarity: ${Math.round(score * 100)}%</div>`;
+    const wishlistText = wishlistIds.includes(item.id) ? "Saved" : "Wishlist";
 
     return `
         <article class="card${selectedClass}" data-id="${item.id}" tabindex="0" role="button" aria-label="Show recommendations for ${escapeHtml(item.name)}">
@@ -436,78 +536,88 @@ function createItemCard(item, score = null) {
                     <span class="price">Rs. ${Number(item.price).toLocaleString("en-IN")}</span>
                 </div>
                 <div class="tag-box">${tagHtml}</div>
+                <button class="wishlist-card-btn" data-id="${item.id}" type="button">${wishlistText}</button>
                 ${scoreHtml}
+                ${matchingTagsHtml}
             </div>
         </article>
     `;
 }
 
 function getRecommendations(selectedId, limit) {
-    const selectedIndex = items.findIndex((item) => item.id === selectedId);
-    const vectors = buildTfidfVectors(items);
-    const selectedVector = vectors[selectedIndex];
-
-    return items
-        .map((item, index) => ({
-            item,
-            score: cosineSimilarity(selectedVector, vectors[index])
-        }))
-        .filter((result) => result.item.id !== selectedId)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit);
+    return getRecommendationsFromModel(items, selectedId, limit);
 }
 
-function buildTfidfVectors(dataset) {
-    const documents = dataset.map((item) => tokenize(item.tags));
-    const vocabulary = [...new Set(documents.flat())];
-    const totalDocuments = documents.length;
+function toggleWishlist(itemId) {
+    if (wishlistIds.includes(itemId)) {
+        wishlistIds = wishlistIds.filter((id) => id !== itemId);
+    } else {
+        wishlistIds = [itemId, ...wishlistIds];
+    }
 
-    return documents.map((document) => {
-        return vocabulary.map((term) => {
-            const tf = termFrequency(term, document);
-            const idf = inverseDocumentFrequency(term, documents, totalDocuments);
-            return tf * idf;
+    saveIdList(WISHLIST_KEY, wishlistIds);
+    renderItems();
+    renderSideLists();
+}
+
+function addRecentlyViewed(itemId) {
+    recentlyViewedIds = [itemId, ...recentlyViewedIds.filter((id) => id !== itemId)].slice(0, 6);
+    saveIdList(RECENT_KEY, recentlyViewedIds);
+    renderSideLists();
+}
+
+function deleteItem(itemId) {
+    const item = items.find((currentItem) => currentItem.id === itemId);
+
+    if (!item || !confirm(`Delete ${item.name}?`)) {
+        return;
+    }
+
+    items = items.filter((currentItem) => currentItem.id !== itemId);
+    wishlistIds = wishlistIds.filter((id) => id !== itemId);
+    recentlyViewedIds = recentlyViewedIds.filter((id) => id !== itemId);
+    saveItems();
+    saveIdList(WISHLIST_KEY, wishlistIds);
+    saveIdList(RECENT_KEY, recentlyViewedIds);
+    goToBrowseView();
+    renderSideLists();
+}
+
+function renderSideLists() {
+    renderSideList(wishlistList, wishlistIds, "No saved items yet.");
+    renderSideList(recentList, recentlyViewedIds, "No recent items yet.");
+}
+
+function renderSideList(container, ids, emptyText) {
+    const listItems = ids
+        .map((id) => items.find((item) => item.id === id))
+        .filter(Boolean);
+
+    if (listItems.length === 0) {
+        container.innerHTML = `<p>${emptyText}</p>`;
+        return;
+    }
+
+    container.innerHTML = listItems.map((item) => {
+        return `<button type="button" data-id="${item.id}">${escapeHtml(item.name)}<span>Rs. ${Number(item.price).toLocaleString("en-IN")}</span></button>`;
+    }).join("");
+
+    container.querySelectorAll("button[data-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            openItemPage(Number(button.dataset.id));
         });
     });
 }
 
-function termFrequency(term, document) {
-    if (document.length === 0) {
-        return 0;
+function createWhatsAppHref(phone, item) {
+    const cleanPhone = String(phone || "").replace(/\D/g, "");
+
+    if (!cleanPhone) {
+        return "";
     }
 
-    const count = document.filter((word) => word === term).length;
-    return count / document.length;
-}
-
-function inverseDocumentFrequency(term, documents, totalDocuments) {
-    const documentsWithTerm = documents.filter((document) => {
-        return document.includes(term);
-    }).length;
-
-    if (documentsWithTerm === 0) {
-        return 0;
-    }
-
-    return Math.log(totalDocuments / documentsWithTerm);
-}
-
-function cosineSimilarity(vectorA, vectorB) {
-    let dotProduct = 0;
-    let magnitudeA = 0;
-    let magnitudeB = 0;
-
-    for (let i = 0; i < vectorA.length; i++) {
-        dotProduct += vectorA[i] * vectorB[i];
-        magnitudeA += vectorA[i] * vectorA[i];
-        magnitudeB += vectorB[i] * vectorB[i];
-    }
-
-    if (magnitudeA === 0 || magnitudeB === 0) {
-        return 0;
-    }
-
-    return dotProduct / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB));
+    const message = `Hi, I am interested in your ${item.name} listed on College Marketplace.`;
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
 function tokenize(text) {
@@ -526,10 +636,40 @@ function cleanTags(text) {
 function loadItems() {
     try {
         const savedItems = localStorage.getItem(STORAGE_KEY);
-        return savedItems ? JSON.parse(savedItems) : cloneDefaultItems();
+        return savedItems ? JSON.parse(savedItems).map(normalizeItem) : cloneDefaultItems();
     } catch (error) {
         return cloneDefaultItems();
     }
+}
+
+function loadProfile() {
+    try {
+        const savedProfile = localStorage.getItem(PROFILE_KEY);
+        return savedProfile ? JSON.parse(savedProfile) : {};
+    } catch (error) {
+        return {};
+    }
+}
+
+function updateProfileStatus() {
+    if (userProfile.name || userProfile.roll) {
+        profileStatus.textContent = `${userProfile.name || "Student"}${userProfile.roll ? ` (${userProfile.roll})` : ""}`;
+    } else {
+        profileStatus.textContent = "Not saved yet";
+    }
+}
+
+function loadIdList(key) {
+    try {
+        const savedIds = localStorage.getItem(key);
+        return savedIds ? JSON.parse(savedIds) : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function saveIdList(key, ids) {
+    localStorage.setItem(key, JSON.stringify(ids));
 }
 
 function saveItems() {
@@ -537,7 +677,22 @@ function saveItems() {
 }
 
 function cloneDefaultItems() {
-    return defaultItems.map((item) => ({ ...item }));
+    return defaultItems.map(normalizeItem);
+}
+
+function normalizeItem(item) {
+    const legacyContact = item.contact || "";
+    const legacyEmail = legacyContact.includes("@") ? legacyContact : "";
+    const legacyPhone = legacyContact && !legacyContact.includes("@") ? legacyContact : "";
+
+    return {
+        seller: "Campus Seller",
+        sellerEmail: legacyEmail || "seller@example.com",
+        sellerPhone: legacyPhone || "919876543210",
+        ...item,
+        sellerEmail: item.sellerEmail || legacyEmail || "seller@example.com",
+        sellerPhone: item.sellerPhone || legacyPhone || "919876543210"
+    };
 }
 
 function updateActiveFilter() {

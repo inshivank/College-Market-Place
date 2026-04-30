@@ -94,7 +94,9 @@ h1 {
 
 .primary-button,
 .secondary-button,
-.filter-btn {
+.filter-btn,
+.danger-button,
+.contact-button {
     border: 0;
     border-radius: 8px;
     transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
@@ -125,18 +127,57 @@ h1 {
     background: #d5deea;
 }
 
-.filter-panel {
+.danger-button {
+    padding: 12px 15px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 800;
+}
+
+.danger-button:hover {
+    background: #fecaca;
+}
+
+.contact-button {
+    display: inline-block;
+    padding: 12px 15px;
+    background: #dbeafe;
+    color: var(--blue);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.profile-panel,
+.filter-panel,
+.side-list-panel {
     margin-top: 24px;
     padding-top: 20px;
     border-top: 1px solid var(--line);
 }
 
-.filter-panel h2 {
+.profile-panel h2,
+.filter-panel h2,
+.side-list-panel h2 {
     margin-bottom: 12px;
     color: #334155;
     font-size: 13px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+}
+
+.profile-panel input {
+    margin-bottom: 8px;
+}
+
+.profile-panel .secondary-button {
+    width: 100%;
+}
+
+.profile-status,
+.side-list p {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 13px;
 }
 
 .filter-btn {
@@ -160,6 +201,28 @@ h1 {
 .filter-btn.active {
     background: var(--soft);
     color: var(--accent-dark);
+}
+
+.side-list {
+    display: grid;
+    gap: 8px;
+}
+
+.side-list button {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--text);
+    text-align: left;
+}
+
+.side-list button span {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
 }
 
 .main-content {
@@ -197,7 +260,7 @@ h1 {
 
 .toolbar {
     display: grid;
-    grid-template-columns: minmax(240px, 1fr) 200px auto;
+    grid-template-columns: minmax(240px, 1fr) 170px 130px 130px auto;
     gap: 14px;
     align-items: end;
     margin-bottom: 28px;
@@ -370,6 +433,17 @@ button:focus-visible,
     font-size: 12px;
 }
 
+.wishlist-card-btn {
+    margin-top: 12px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: white;
+    color: var(--accent-dark);
+    font-size: 12px;
+    font-weight: 900;
+}
+
 .score {
     margin-top: 13px;
     padding: 9px 10px;
@@ -377,6 +451,33 @@ button:focus-visible,
     background: #fff7ed;
     color: #9a3412;
     font-size: 13px;
+    font-weight: 800;
+}
+
+.match-box {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.match-box strong {
+    display: block;
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: 12px;
+}
+
+.match-box div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.match-box span {
+    color: var(--accent-dark);
+    font-size: 12px;
     font-weight: 800;
 }
 
@@ -457,6 +558,31 @@ button:focus-visible,
 
 .detail-edit-button {
     width: auto;
+}
+
+.seller-box {
+    display: grid;
+    gap: 8px;
+    margin: 18px 0;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.seller-box p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.seller-box strong {
+    color: var(--text);
+}
+
+.detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-top: 26px;
 }
 

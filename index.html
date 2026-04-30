@@ -13,11 +13,18 @@
             <span class="brand-mark">CM</span>
             <div>
                 <h1>College Marketplace</h1>
-                <p>Find campus items and get smart recommendations.</p>
             </div>
         </div>
 
         <button class="primary-button" id="showAddFormBtn" type="button">+ Add Item</button>
+
+        <section class="profile-panel" aria-label="User profile">
+            <h2>Profile</h2>
+            <input type="text" id="profileName" placeholder="Your name">
+            <input type="text" id="profileRoll" placeholder="Roll number">
+            <button class="secondary-button" id="saveProfileBtn" type="button">Save Profile</button>
+            <p class="profile-status" id="profileStatus"></p>
+        </section>
 
         <section class="filter-panel" aria-label="Category filters">
             <h2>Category</h2>
@@ -28,15 +35,23 @@
             <button class="filter-btn" type="button" data-category="Others">Others</button>
         </section>
 
+        <section class="side-list-panel" aria-label="Wishlist">
+            <h2>Wishlist</h2>
+            <div id="wishlistList" class="side-list"></div>
+        </section>
+
+        <section class="side-list-panel" aria-label="Recently viewed">
+            <h2>Recently Viewed</h2>
+            <div id="recentList" class="side-list"></div>
+        </section>
+
     </aside>
 
     <main class="main-content">
         <div id="browseView">
             <section class="hero">
                 <div>
-                    <p class="eyebrow">College Marketplace</p>
                     <h2>Campus buying, selling, and smart item discovery.</h2>
-                    <p class="hero-copy">Browse useful student items, add your own listing, and get similar recommendations instantly.</p>
                 </div>
             </section>
 
@@ -53,6 +68,14 @@
                         <option value="price-high">Price: High to Low</option>
                         <option value="name">Name: A to Z</option>
                     </select>
+                </label>
+                <label>
+                    Min Price
+                    <input type="number" id="minPriceInput" min="0" placeholder="0">
+                </label>
+                <label>
+                    Max Price
+                    <input type="number" id="maxPriceInput" min="0" placeholder="50000">
                 </label>
                 <button class="secondary-button" id="resetDataBtn" type="button">Reset Demo Data</button>
             </section>
@@ -90,6 +113,18 @@
                         <label>
                             Upload Image
                             <input type="file" id="itemImageFile" accept="image/*">
+                        </label>
+                        <label>
+                            Seller Name
+                            <input type="text" id="itemSeller" placeholder="Your name">
+                        </label>
+                        <label>
+                            Seller Email
+                            <input type="email" id="itemSellerEmail" placeholder="seller@example.com">
+                        </label>
+                        <label>
+                            Seller Phone
+                            <input type="tel" id="itemSellerPhone" placeholder="919876543210">
                         </label>
                     </div>
                     <label>
@@ -154,6 +189,18 @@
                             Upload New Image
                             <input type="file" id="editItemImageFile" accept="image/*">
                         </label>
+                        <label>
+                            Seller Name
+                            <input type="text" id="editItemSeller">
+                        </label>
+                        <label>
+                            Seller Email
+                            <input type="email" id="editItemSellerEmail">
+                        </label>
+                        <label>
+                            Seller Phone
+                            <input type="tel" id="editItemSellerPhone">
+                        </label>
                     </div>
                     <label>
                         Tags
@@ -170,7 +217,7 @@
             <section class="recommendation-section">
                 <div class="section-heading">
                     <div>
-                        <p class="eyebrow">Similar Items</p>
+                        <p class="eyebrow">8 Similar Items</p>
                         <h2 id="selectedTitle">Recommended Items</h2>
                     </div>
                     <p id="selectedTags" class="selected-tags"></p>
@@ -180,6 +227,7 @@
         </section>
     </main>
 
+    <script src="recommendationModel.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
