@@ -1,62 +1,85 @@
-# College Marketplace with Recommendation System
+# College Marketplace with Intelligent Recommendation System
 
-A simple static web app where students can browse campus marketplace items and get similar item recommendations.
+A smart campus marketplace platform designed to simplify buying and selling among students while providing personalized item recommendations through Machine Learning concepts. The application enables students to discover relevant products faster by leveraging a content-based recommendation engine built from scratch using TF-IDF vectorization, Cosine Similarity, and K-Nearest Neighbors (KNN).
+
+The platform allows users to browse marketplace listings, filter products by category and price, save favorite items, contact sellers, manage personal profiles, and receive intelligent recommendations based on item similarity. Unlike traditional marketplace applications, the recommendation engine explains suggestions through similarity scores and matched tags, improving transparency and user trust.
+
+Developed as a lightweight static web application using HTML, CSS, and JavaScript, the project demonstrates the practical application of recommendation systems, information retrieval techniques, and client-side data management through localStorage. The system is fully compatible with GitHub Pages deployment, making it accessible without requiring a backend server.
+
+## Key Features
+
+* Browse and search marketplace listings
+* Category and price-based filtering
+* Wishlist and favorite item management
+* Recently viewed items tracking
+* Student profile management
+* Seller contact integration (Email, Phone, WhatsApp)
+* Add, edit, and delete marketplace listings
+* Image upload and storage using localStorage
+* Explainable recommendations with similarity scores
+* Matched tag visualization for recommendation transparency
+
+## Recommendation Engine
+
+The recommendation system follows a Content-Based Filtering approach:
+
+1. Item tags are converted into TF-IDF vectors.
+2. Cosine Similarity is calculated between items.
+3. K-Nearest Neighbors (KNN) identifies the most similar products.
+4. The top 8 nearest items are recommended to the user.
+5. Similarity scores and matched tags are displayed to explain recommendations.
+
+This implementation demonstrates core Machine Learning and Information Retrieval concepts without relying on external libraries.
 
 ## Tech Stack
 
-- HTML
-- CSS
-- JavaScript
-- GitHub Pages compatible
+* HTML5
+* CSS3
+* JavaScript (ES6)
+* LocalStorage
+* GitHub Pages
 
-## Features
+## Project Structure
 
-- Display marketplace items with name, category, price, image, and tags.
-- Filter items by category.
-- Click an item to show up to 8 recommended items.
-- Manual TF-IDF implementation in JavaScript.
-- Cosine similarity scoring in JavaScript.
-- KNN-style nearest neighbor selection for the top 8 recommendations.
-- Separate `recommendationModel.js` file for the recommendation model.
-- Similarity score shown for each recommended item.
-- Matched tags shown for each recommendation to explain why it was suggested.
-- Add new items using localStorage.
-- Upload item images in the browser. Images are stored in localStorage as data URLs.
-- Edit and delete items in the browser.
-- Save a student profile with name and roll number.
-- Wishlist/favorite items.
-- Contact seller with seller name, email, optional phone, and WhatsApp Web link.
-- Filter items by price range.
-- Recently viewed items list.
+```text
+College-Marketplace/
+│
+├── index.html                 # User interface
+├── style.css                  # Styling and responsive design
+├── script.js                  # Marketplace functionality
+├── recommendationModel.js     # TF-IDF, Cosine Similarity, and KNN logic
+└── README.md                  # Project documentation
+```
 
-## Recommendation Logic
+## Learning Outcomes
 
-This project uses a content-based recommendation system with K-Nearest Neighbors. Each item's tags are converted into a TF-IDF vector. Cosine similarity is then used as the distance/similarity measure between the selected item and all other items. The app applies KNN by sorting items by similarity score and selecting the top 8 nearest neighbors as recommendations.
+Through this project, I gained hands-on experience in:
 
-Viva explanation:
+* Recommendation System Design
+* Content-Based Filtering
+* TF-IDF Vectorization
+* Cosine Similarity Computation
+* K-Nearest Neighbors (KNN)
+* Frontend Development
+* Client-Side Data Persistence
+* Explainable AI Concepts
+* User-Centric Application Design
 
-> This project uses a content-based KNN recommendation system. Item tags are converted into TF-IDF vectors, cosine similarity is calculated, and the top 8 nearest items are recommended.
+## Deployment
 
-## Files
+The application is fully static and can be deployed directly on GitHub Pages, Netlify, or Vercel without requiring a backend server.
 
-- `index.html`
-- `style.css`
-- `script.js`
-- `recommendationModel.js`
+## Future Enhancements
 
-## How To Run
+* User authentication and authorization
+* Firebase/Supabase database integration
+* Collaborative filtering recommendations
+* Personalized recommendation profiles
+* Product search using NLP techniques
+* Real-time chat between buyers and sellers
+* Analytics dashboard for marketplace insights
 
-Open `index.html` in a browser, or deploy the repository using GitHub Pages.
+## Project Impact
 
-## GitHub Pages Deployment
-
-1. Push this project to a GitHub repository.
-2. Go to repository `Settings`.
-3. Open `Pages`.
-4. Choose the branch, usually `main`.
-5. Choose the root folder `/`.
-6. Save and open the GitHub Pages link after it finishes deploying.
-
-The deployed site works because all logic is inside static files: `index.html`, `style.css`, `script.js`, and `recommendationModel.js`.
-
-Note: GitHub Pages is static hosting. Add/edit/image upload works inside each visitor's browser using localStorage. To make all users share the same uploaded items online, connect a backend/database such as Firebase or Supabase.
+This project demonstrates how Machine Learning concepts can be integrated into real-world web applications to enhance user experience. By combining recommendation algorithms with an intuitive marketplace interface, the platform helps students discover relevant products more efficiently while showcasing practical skills in Artificial Intelligence, Data Science, and Full-Stack Development.
+ic hosting. Add/edit/image upload works inside each visitor's browser using localStorage. To make all users share the same uploaded items online, connect a backend/database such as Firebase or Supabase.
