@@ -4,6 +4,18 @@ import api from "../api";
 import ItemCard from "../components/ItemCard";
 import { useAuth } from "../context/AuthContext";
 
+function categoryPlaceholder(category = "Others") {
+  const palette = {
+    Books: ["#0f766e", "#ccfbf1", "BOOK"],
+    Electronics: ["#2563eb", "#dbeafe", "TECH"],
+    Clothes: ["#be123c", "#ffe4e6", "WEAR"],
+    Others: ["#92400e", "#fef3c7", "ITEM"]
+  };
+  const [color, background, label] = palette[category] || palette.Others;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"><rect width="900" height="520" fill="${background}"/><rect x="170" y="104" width="560" height="312" rx="34" fill="${color}" opacity="0.94"/><circle cx="250" cy="190" r="34" fill="white" opacity="0.88"/><path d="M228 330 H672" stroke="white" stroke-width="28" stroke-linecap="round" opacity="0.9"/><path d="M228 274 H548" stroke="white" stroke-width="22" stroke-linecap="round" opacity="0.68"/><text x="450" y="222" text-anchor="middle" fill="white" font-family="Arial" font-size="72" font-weight="700">${label}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 export default function ItemDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -45,11 +57,19 @@ export default function ItemDetailPage() {
   const sellerId = item.seller?._id || item.seller;
   const canEdit = String(sellerId) === String(user?.id) || ["admin", "manager"].includes(role);
   const canDelete = String(sellerId) === String(user?.id) || role === "admin";
+  const images = item.images?.length > 0 ? item.images : [categoryPlaceholder(item.category)];
 
   return (
     <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_360px]">
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <img src={item.images?.[0] || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"} alt={item.title} className="h-80 w-full object-cover" />
+        <img src={images[0]} alt={item.title} className="h-80 w-full object-cover" />
+        {images.length > 1 && (
+          <div className="grid grid-cols-4 gap-2 border-b border-slate-100 bg-slate-50 p-3">
+            {images.slice(0, 4).map((image) => (
+              <img key={image} src={image} alt={item.title} className="h-20 w-full rounded-lg object-cover ring-1 ring-slate-200" />
+            ))}
+          </div>
+        )}
         <div className="space-y-5 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -64,8 +84,8 @@ export default function ItemDetailPage() {
           </div>
           <div className="rounded-xl bg-slate-50 p-4">
             <p className="font-black">Seller</p>
-            <p className="text-slate-600">{item.seller?.name || "Campus Seller"} · {item.seller?.email}</p>
-            <p className="text-sm text-slate-500">{item.views} views · {item.status}</p>
+            <p className="text-slate-600">{item.seller?.name || "Campus Seller"} - {item.seller?.email}</p>
+            <p className="text-sm text-slate-500">{item.views} views - {item.status}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             {canEdit && <Link to={`/items/${item._id}/edit`} className="btn-secondary">Edit</Link>}

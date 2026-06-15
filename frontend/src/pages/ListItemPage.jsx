@@ -20,6 +20,10 @@ export default function ListItemPage() {
   const { isAuthenticated } = useAuth();
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = Boolean(id);
 
   useEffect(() => {
@@ -44,28 +48,81 @@ export default function ListItemPage() {
     loadItem();
   }, [id]);
 
+  useEffect(() => {
+    const previewUrls = imageFiles.map((file) => URL.createObjectURL(file));
+    setPreviews(previewUrls);
+
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imageFiles]);
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  function handleImageSelection(event) {
+    const selectedFiles = Array.from(event.target.files || []);
+
+    if (selectedFiles.length > 4) {
+      setError("You can upload a maximum of 4 images");
+      event.target.value = "";
+      return;
+    }
+
+    setError("");
+    setImageFiles(selectedFiles);
+  }
+
+  async function uploadSelectedImages() {
+    if (imageFiles.length === 0) {
+      return [];
+    }
+
+    const formData = new FormData();
+    imageFiles.forEach((file) => formData.append("images", file));
+
+    const { data } = await api.post("/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      },
+      onUploadProgress(progressEvent) {
+        if (!progressEvent.total) {
+          return;
+        }
+
+        setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+      }
+    });
+
+    return data.urls;
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
-
-    const payload = {
-      ...form,
-      price: Number(form.price),
-      tags: form.tags,
-      images: form.images.split(",").map((image) => image.trim()).filter(Boolean)
-    };
+    setUploadProgress(0);
+    setIsSubmitting(true);
 
     try {
+      const manualImageUrls = form.images.split(",").map((image) => image.trim()).filter(Boolean);
+      const uploadedImageUrls = await uploadSelectedImages();
+      const payload = {
+        ...form,
+        price: Number(form.price),
+        tags: form.tags,
+        images: [...manualImageUrls, ...uploadedImageUrls].slice(0, 4)
+      };
+
       const { data } = isEditing
         ? await api.put(`/items/${id}`, payload)
         : await api.post("/items", payload);
+
       navigate(`/items/${data.item._id}`);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Could not save item");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -77,17 +134,77 @@ export default function ListItemPage() {
           <h1 className="text-3xl font-black">{isEditing ? "Edit item" : "List an item"}</h1>
         </div>
         {error && <p className="rounded-lg bg-rose-50 p-3 text-sm font-semibold text-rose-700">{error}</p>}
-        <label>Title<input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required /></label>
-        <label>Description<textarea rows="5" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} required /></label>
+        <label>
+          Title
+          <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
+        </label>
+        <label>
+          Description
+          <textarea rows="5" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} required />
+        </label>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label>Price<input type="number" min="0" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} required /></label>
-          <label>Category<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Books</option><option>Electronics</option><option>Clothes</option><option>Others</option></select></label>
-          <label>Condition<select value={form.condition} onChange={(event) => setForm({ ...form, condition: event.target.value })}><option value="used">Used</option><option value="new">New</option></select></label>
-          <label>Status<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="pending">Pending</option><option value="active">Active</option><option value="sold">Sold</option></select></label>
+          <label>
+            Price
+            <input type="number" min="0" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} required />
+          </label>
+          <label>
+            Category
+            <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
+              <option>Books</option>
+              <option>Electronics</option>
+              <option>Clothes</option>
+              <option>Others</option>
+            </select>
+          </label>
+          <label>
+            Condition
+            <select value={form.condition} onChange={(event) => setForm({ ...form, condition: event.target.value })}>
+              <option value="used">Used</option>
+              <option value="new">New</option>
+            </select>
+          </label>
+          <label>
+            Status
+            <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+              <option value="sold">Sold</option>
+            </select>
+          </label>
         </div>
-        <label>Tags<input value={form.tags} onChange={(event) => setForm({ ...form, tags: event.target.value })} placeholder="book, coding, exam" /></label>
-        <label>Image URLs<input value={form.images} onChange={(event) => setForm({ ...form, images: event.target.value })} placeholder="https://image-one.jpg, https://image-two.jpg" /></label>
-        <button type="submit" className="btn-primary">{isEditing ? "Save changes" : "Create listing"}</button>
+        <label>
+          Tags
+          <input value={form.tags} onChange={(event) => setForm({ ...form, tags: event.target.value })} placeholder="book, coding, exam" />
+        </label>
+        <label>
+          Image URLs
+          <input value={form.images} onChange={(event) => setForm({ ...form, images: event.target.value })} placeholder="https://image-one.jpg, https://image-two.jpg" />
+        </label>
+        <label>
+          Upload Images
+          <input type="file" accept="image/*" multiple onChange={handleImageSelection} />
+        </label>
+        {previews.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {previews.map((preview) => (
+              <img key={preview} src={preview} alt="Selected preview" className="h-28 w-full rounded-lg object-cover ring-1 ring-slate-200" />
+            ))}
+          </div>
+        )}
+        {isSubmitting && uploadProgress > 0 && uploadProgress < 100 && (
+          <div className="rounded-lg bg-slate-50 p-3">
+            <div className="mb-2 flex justify-between text-sm font-bold text-slate-600">
+              <span>Uploading images</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full rounded-full bg-teal-700" style={{ width: `${uploadProgress}%` }} />
+            </div>
+          </div>
+        )}
+        <button type="submit" disabled={isSubmitting} className="btn-primary disabled:cursor-not-allowed disabled:opacity-60">
+          {isSubmitting ? "Saving..." : isEditing ? "Save changes" : "Create listing"}
+        </button>
       </form>
     </main>
   );

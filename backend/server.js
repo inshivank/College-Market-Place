@@ -14,6 +14,7 @@ import mongoose from 'mongoose';
 import adminRoutes from './routes/admin.js';
 import authRoutes from './routes/auth.js';
 import itemRoutes from './routes/items.js';
+import uploadRoutes from './routes/upload.js';
 import wishlistRoutes from './routes/wishlist.js';
 
 const app = express();
@@ -48,6 +49,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 
 async function startServer() {
