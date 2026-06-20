@@ -1,11 +1,11 @@
 import express from "express";
 import { verifyToken } from "../middleware/auth.js";
-import upload from "../middleware/upload.js";
+import upload, { uploadImageToCloudinary } from "../middleware/upload.js";
 
 const router = express.Router();
 
 router.post("/", verifyToken, (req, res) => {
-  upload.array("images", 4)(req, res, (error) => {
+  upload.array("images", 4)(req, res, async (error) => {
     if (error) {
       return res.status(400).json({ message: error.message || "Image upload failed" });
     }
@@ -14,12 +14,21 @@ router.post("/", verifyToken, (req, res) => {
       return res.status(400).json({ message: "Please upload at least one image" });
     }
 
-    const urls = req.files.map((file) => file.path);
+    try {
+      const uploadedImages = await Promise.all(
+        req.files.map((file) => uploadImageToCloudinary(file.buffer))
+      );
+      const urls = uploadedImages.map((image) => image.secure_url);
 
-    return res.status(201).json({
-      message: "Images uploaded successfully",
-      urls
-    });
+      return res.status(201).json({
+        message: "Images uploaded successfully",
+        urls
+      });
+    } catch (uploadError) {
+      return res.status(500).json({
+        message: uploadError.message || "Image upload failed"
+      });
+    }
   });
 });
 
