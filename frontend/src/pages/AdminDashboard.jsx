@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api";
+import AdminFeedback from "../components/AdminFeedback";
 
-const tabs = ["Overview", "Users", "All Items"];
+const tabs = ["Overview", "Users", "All Items", "Feedback"];
 const roles = ["user", "manager", "admin"];
 
 function StatusBadge({ status }) {
@@ -155,6 +156,8 @@ export default function AdminDashboard() {
           </table>
         </section>
       )}
+
+      {activeTab === "Feedback" && <AdminFeedback />}
     </main>
   );
 }

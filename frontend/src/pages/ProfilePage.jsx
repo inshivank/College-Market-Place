@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import api from "../api";
 import ItemCard from "../components/ItemCard";
+import MyFeedback from "../components/MyFeedback";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProfilePage() {
@@ -52,6 +53,7 @@ export default function ProfilePage() {
           {wishlist.map((item) => <ItemCard key={item._id} item={item} onWishlistChange={fetchProfileData} />)}
         </div>
       </section>
+      <MyFeedback />
     </main>
   );
 }

@@ -16,6 +16,7 @@ import authRoutes from './routes/auth.js';
 import itemRoutes from './routes/items.js';
 import uploadRoutes from './routes/upload.js';
 import wishlistRoutes from './routes/wishlist.js';
+import feedbackRoutes from './routes/feedback.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,6 +52,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 function printRegisteredRoutes() {
   const mountedRouters = [
@@ -58,7 +60,8 @@ function printRegisteredRoutes() {
     ['/api/auth', authRoutes],
     ['/api/items', itemRoutes],
     ['/api/upload', uploadRoutes],
-    ['/api/wishlist', wishlistRoutes]
+    ['/api/wishlist', wishlistRoutes],
+    ['/api/feedback', feedbackRoutes]
   ];
 
   console.log('Registered Express routes:');

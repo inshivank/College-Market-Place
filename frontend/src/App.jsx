@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import FeedbackWidget from "./components/FeedbackWidget";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import HomePage from "./pages/HomePage";
@@ -39,6 +40,7 @@ export default function App() {
           }
         />
       </Routes>
+      <FeedbackWidget />
     </>
   );
 }
