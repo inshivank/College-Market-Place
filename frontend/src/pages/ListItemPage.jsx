@@ -11,7 +11,8 @@ const emptyForm = {
   condition: "used",
   status: "pending",
   tags: "",
-  images: ""
+  images: "",
+  whatsappNumber: ""
 };
 
 export default function ListItemPage() {
@@ -41,7 +42,8 @@ export default function ListItemPage() {
         condition: data.item.condition || "used",
         status: data.item.status || "pending",
         tags: data.item.tags?.join(", ") || "",
-        images: data.item.images?.join(", ") || ""
+        images: data.item.images?.join(", ") || "",
+        whatsappNumber: data.item.whatsappNumber || ""
       });
     }
 
@@ -175,6 +177,18 @@ export default function ListItemPage() {
         <label>
           Tags
           <input value={form.tags} onChange={(event) => setForm({ ...form, tags: event.target.value })} placeholder="book, coding, exam" />
+        </label>
+        <label>
+          WhatsApp Number
+          <input
+            type="tel"
+            value={form.whatsappNumber}
+            onChange={(event) => setForm({ ...form, whatsappNumber: event.target.value })}
+            placeholder="+91 98765 43210"
+            autoComplete="tel"
+            required={!isEditing || Boolean(form.whatsappNumber)}
+          />
+          <span className="mt-1 block text-xs font-normal text-slate-400">Include your country code so buyers can contact you about this listing.</span>
         </label>
         <label>
           Image URLs

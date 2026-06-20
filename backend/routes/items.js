@@ -15,6 +15,16 @@ function normalizeTags(tags) {
     .filter(Boolean);
 }
 
+function normalizeWhatsAppNumber(value) {
+  const raw = String(value || "").trim();
+  const normalized = raw.startsWith("+")
+    ? `+${raw.slice(1).replace(/\D/g, "")}`
+    : raw.replace(/\D/g, "");
+  const digits = normalized.replace(/\D/g, "");
+
+  return digits.length >= 7 && digits.length <= 15 ? normalized : "";
+}
+
 function canManageItem(user, item) {
   const sellerId = item.seller?._id || item.seller;
   return String(sellerId) === user.id || ["admin", "manager"].includes(user.role);
@@ -125,12 +135,17 @@ router.get("/", async (req, res) => {
 
 router.post("/", verifyToken, async (req, res) => {
   try {
-    const { title, description, price, category, tags, images, condition, status } = req.body;
+    const { title, description, price, category, tags, images, condition, status, whatsappNumber } = req.body;
 
-    if (!title || !description || price === undefined || !category || !condition) {
+    if (!title || !description || price === undefined || !category || !condition || !whatsappNumber) {
       return res.status(400).json({
-        message: "Title, description, price, category, and condition are required"
+        message: "Title, description, price, category, condition, and WhatsApp number are required"
       });
+    }
+
+    const normalizedWhatsAppNumber = normalizeWhatsAppNumber(whatsappNumber);
+    if (!normalizedWhatsAppNumber) {
+      return res.status(400).json({ message: "Please provide a valid WhatsApp number with country code" });
     }
 
     const item = await Item.create({
@@ -142,6 +157,7 @@ router.post("/", verifyToken, async (req, res) => {
       status,
       tags: normalizeTags(tags),
       images: Array.isArray(images) ? images.filter(Boolean) : [],
+      whatsappNumber: normalizedWhatsAppNumber,
       seller: req.user.id
     });
 
@@ -226,14 +242,19 @@ router.put("/:id", verifyToken, async (req, res) => {
       "category",
       "images",
       "condition",
-      "status"
+      "status",
+      "whatsappNumber"
     ];
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        item[field] = req.body[field];
+        item[field] = field === "whatsappNumber" ? normalizeWhatsAppNumber(req.body[field]) : req.body[field];
       }
     });
+
+    if (req.body.whatsappNumber !== undefined && !item.whatsappNumber) {
+      return res.status(400).json({ message: "Please provide a valid WhatsApp number with country code" });
+    }
 
     if (req.body.tags !== undefined) {
       item.tags = normalizeTags(req.body.tags);
