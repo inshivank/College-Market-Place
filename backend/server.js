@@ -52,6 +52,31 @@ app.use('/api/items', itemRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 
+function printRegisteredRoutes() {
+  const mountedRouters = [
+    ['/api/admin', adminRoutes],
+    ['/api/auth', authRoutes],
+    ['/api/items', itemRoutes],
+    ['/api/upload', uploadRoutes],
+    ['/api/wishlist', wishlistRoutes]
+  ];
+
+  console.log('Registered Express routes:');
+  console.log('GET /api/health');
+
+  mountedRouters.forEach(([mountPath, router]) => {
+    router.stack
+      .filter((layer) => layer.route)
+      .forEach((layer) => {
+        const methods = Object.keys(layer.route.methods).join(',').toUpperCase();
+        const routePath = layer.route.path === '/' ? '' : layer.route.path;
+        console.log(`${methods} ${mountPath}${routePath}`);
+      });
+  });
+}
+
+printRegisteredRoutes();
+
 async function startServer() {
   try {
     if (!MONGODB_URI) {

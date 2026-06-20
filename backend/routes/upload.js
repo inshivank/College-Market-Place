@@ -23,4 +23,6 @@ router.post("/", verifyToken, (req, res) => {
   });
 });
 
+console.log("Upload router loaded: POST /");
+
 export default router;
