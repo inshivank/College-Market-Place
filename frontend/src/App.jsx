@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import HomePage from "./pages/HomePage";
 import ItemDetailPage from "./pages/ItemDetailPage";
+import InboxPage from "./pages/InboxPage";
 import ListItemPage from "./pages/ListItemPage";
 import LoginPage from "./pages/LoginPage";
 import ManagerDashboard from "./pages/ManagerDashboard";
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/items/:id" element={<ItemDetailPage />} />
         <Route path="/items/:id/edit" element={<ListItemPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/inbox" element={<ProtectedRoute><InboxPage /></ProtectedRoute>} />
         <Route
           path="/admin"
           element={

@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
+console.log("MONGODB_URI loaded:", process.env.MONGODB_URI);
 
 console.log('JWT_SECRET loaded:', process.env.JWT_SECRET ? 'YES' : 'NO');
 
@@ -17,6 +18,7 @@ import itemRoutes from './routes/items.js';
 import uploadRoutes from './routes/upload.js';
 import wishlistRoutes from './routes/wishlist.js';
 import feedbackRoutes from './routes/feedback.js';
+import messageRoutes from './routes/messages.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +55,7 @@ app.use('/api/items', itemRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/messages', messageRoutes);
 
 function printRegisteredRoutes() {
   const mountedRouters = [
@@ -61,7 +64,8 @@ function printRegisteredRoutes() {
     ['/api/items', itemRoutes],
     ['/api/upload', uploadRoutes],
     ['/api/wishlist', wishlistRoutes],
-    ['/api/feedback', feedbackRoutes]
+    ['/api/feedback', feedbackRoutes],
+    ['/api/messages', messageRoutes]
   ];
 
   console.log('Registered Express routes:');

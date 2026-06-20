@@ -194,13 +194,14 @@ router.get("/:id", async (req, res) => {
       req.params.id,
       { $inc: { views: 1 } },
       { new: true }
-    ).populate("seller", "name email phone avatar");
+    ).populate("seller", "name email phone avatar verified createdAt");
 
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    return res.status(200).json({ item });
+    const totalListings = await Item.countDocuments({ seller: item.seller?._id || item.seller });
+    return res.status(200).json({ item, sellerStats: { totalListings, averageResponseTime: "Usually within a day" } });
   } catch (error) {
     return res.status(500).json({ message: "Could not fetch item", error: error.message });
   }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api";
 import ItemCard from "../components/ItemCard";
+import SellerContactCard from "../components/SellerContactCard";
 import { useAuth } from "../context/AuthContext";
 
 function categoryPlaceholder(category = "Others") {
@@ -22,6 +23,7 @@ export default function ItemDetailPage() {
   const { user, role } = useAuth();
   const [item, setItem] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
+  const [sellerStats, setSellerStats] = useState(null);
   const [error, setError] = useState("");
 
   async function fetchItem() {
@@ -31,6 +33,7 @@ export default function ItemDetailPage() {
         api.get(`/items/${id}/recommendations`)
       ]);
       setItem(itemResponse.data.item);
+      setSellerStats(itemResponse.data.sellerStats);
       setRecommendations(recommendationResponse.data.recommendations);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Could not load item");
@@ -82,11 +85,7 @@ export default function ItemDetailPage() {
           <div className="flex flex-wrap gap-2">
             {item.tags?.map((tag) => <span key={tag} className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">#{tag}</span>)}
           </div>
-          <div className="rounded-xl bg-slate-50 p-4">
-            <p className="font-black">Seller</p>
-            <p className="text-slate-600">{item.seller?.name || "Campus Seller"} - {item.seller?.email}</p>
-            <p className="text-sm text-slate-500">{item.views} views - {item.status}</p>
-          </div>
+          <p className="text-sm font-bold text-slate-400">{item.views} views · {item.status}</p>
           <div className="flex flex-wrap gap-3">
             {canEdit && <Link to={`/items/${item._id}/edit`} className="btn-secondary">Edit</Link>}
             {canDelete && <button type="button" onClick={deleteItem} className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white">Delete</button>}
@@ -94,12 +93,15 @@ export default function ItemDetailPage() {
         </div>
       </section>
 
-      <aside>
+      <aside className="space-y-7">
+        <SellerContactCard item={item} stats={sellerStats} />
+        <div>
         <h2 className="mb-4 text-xl font-black">Similar items</h2>
         <div className="space-y-4">
           {recommendations.map(({ item: recommendation }) => (
             <ItemCard key={recommendation._id} item={recommendation} />
           ))}
+        </div>
         </div>
       </aside>
     </main>

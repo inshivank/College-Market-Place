@@ -27,6 +27,7 @@ function sanitizeUser(user) {
     rollNumber: user.rollNumber,
     phone: user.phone,
     avatar: user.avatar,
+    verified: user.verified,
     createdAt: user.createdAt
   };
 }
