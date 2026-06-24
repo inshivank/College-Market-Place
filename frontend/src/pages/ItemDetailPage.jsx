@@ -34,7 +34,7 @@ export default function ItemDetailPage() {
       ]);
       setItem(itemResponse.data.item);
       setSellerStats(itemResponse.data.sellerStats);
-      setRecommendations(recommendationResponse.data.recommendations);
+      setRecommendations(recommendationResponse.data.recommendations || []);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Could not load item");
     }
@@ -43,6 +43,23 @@ export default function ItemDetailPage() {
   useEffect(() => {
     fetchItem();
   }, [id]);
+
+  useEffect(() => {
+    if (!item) return;
+    const stored = JSON.parse(localStorage.getItem("collegeMarketplaceRecentlyViewed") || "[]");
+    const next = [
+      {
+        _id: item._id,
+        title: item.title,
+        category: item.category,
+        price: item.price,
+        images: item.images,
+        createdAt: item.createdAt
+      },
+      ...stored.filter((record) => record._id !== item._id)
+    ].slice(0, 8);
+    localStorage.setItem("collegeMarketplaceRecentlyViewed", JSON.stringify(next));
+  }, [item]);
 
   async function deleteItem() {
     await api.delete(`/items/${id}`);
@@ -63,46 +80,103 @@ export default function ItemDetailPage() {
   const images = item.images?.length > 0 ? item.images : [categoryPlaceholder(item.category)];
 
   return (
-    <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_360px]">
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <img src={images[0]} alt={item.title} className="h-80 w-full object-cover" />
-        {images.length > 1 && (
-          <div className="grid grid-cols-4 gap-2 border-b border-slate-100 bg-slate-50 p-3">
-            {images.slice(0, 4).map((image) => (
-              <img key={image} src={image} alt={item.title} className="h-20 w-full rounded-lg object-cover ring-1 ring-slate-200" />
-            ))}
-          </div>
-        )}
-        <div className="space-y-5 p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-black uppercase text-teal-700">{item.category}</p>
-              <h1 className="text-4xl font-black">{item.title}</h1>
+    <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1.75fr_0.95fr]">
+      <section className="overflow-hidden rounded-[32px] bg-white shadow-soft">
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-5 p-6">
+            <p className="text-sm font-black uppercase tracking-[0.24em] text-slate-500">{item.category}</p>
+            <h1 className="text-5xl font-black text-slate-950">{item.title}</h1>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+              <span>{item.department || "General campus"}</span>
+              <span>•</span>
+              <span>{item.condition}</span>
+              <span>•</span>
+              <span>{new Date(item.createdAt).toLocaleDateString()}</span>
             </div>
-            <p className="text-3xl font-black text-teal-700">Rs. {Number(item.price).toLocaleString("en-IN")}</p>
+            <p className="max-w-3xl text-base leading-8 text-slate-600">{item.description}</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-3xl bg-slate-50 p-5">
+                <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Price</p>
+                <p className="mt-3 text-4xl font-black text-ocean">₹{Number(item.price).toLocaleString("en-IN")}</p>
+              </div>
+              <div className="rounded-3xl bg-slate-50 p-5">
+                <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Engagement</p>
+                <div className="mt-3 space-y-2 text-sm text-slate-600">
+                  <p>{item.views || 0} views</p>
+                  <p>{item.wishlistCount || item.wishlistedBy?.length || 0} saves</p>
+                  <p>Popularity score {Math.min(100, Math.round((item.views || 0) / 5))}/100</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="leading-7 text-slate-600">{item.description}</p>
-          <div className="flex flex-wrap gap-2">
-            {item.tags?.map((tag) => <span key={tag} className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">#{tag}</span>)}
+
+          <div className="space-y-5 p-6">
+            <div className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Seller trust</p>
+              <div className="flex items-center gap-4">
+                <div className="grid h-16 w-16 place-items-center rounded-3xl bg-white text-2xl">{item.seller?.name?.[0] || "S"}</div>
+                <div>
+                  <p className="text-lg font-black text-slate-950">{item.seller?.name || "Campus seller"}</p>
+                  <p className="text-sm text-slate-500">{item.seller?.verified ? "Verified seller" : "Seller verification pending"}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-3xl bg-white p-4 text-center">
+                  <p className="text-2xl font-black text-slate-950">{sellerStats?.totalListings ?? "—"}</p>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Listings</p>
+                </div>
+                <div className="rounded-3xl bg-white p-4 text-center">
+                  <p className="text-2xl font-black text-slate-950">{sellerStats?.responseTime || "24h"}</p>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Response</p>
+                </div>
+                <div className="rounded-3xl bg-white p-4 text-center">
+                  <p className="text-2xl font-black text-slate-950">{sellerStats?.rating || "4.7"}</p>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Rating</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              <button type="button" className="btn-primary">Contact seller</button>
+              <a href={`mailto:${item.seller?.email || ""}`} className="rounded-3xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-black text-slate-950 transition hover:bg-slate-100">Message via email</a>
+            </div>
           </div>
-          <p className="text-sm font-bold text-slate-400">{item.views} views · {item.status}</p>
-          <div className="flex flex-wrap gap-3">
-            {canEdit && <Link to={`/items/${item._id}/edit`} className="btn-secondary">Edit</Link>}
-            {canDelete && <button type="button" onClick={deleteItem} className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white">Delete</button>}
+        </div>
+
+        <div className="rounded-t-[32px] border-t border-slate-100 bg-slate-50 p-6">
+          <h2 className="text-2xl font-black text-slate-950">Product gallery</h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {images.map((image) => (
+              <img key={image} src={image} alt={item.title} className="h-48 w-full rounded-3xl object-cover shadow-sm" />
+            ))}
           </div>
         </div>
       </section>
 
-      <aside className="space-y-7">
+      <aside className="space-y-8">
         <SellerContactCard item={item} stats={sellerStats} />
-        <div>
-        <h2 className="mb-4 text-xl font-black">Similar items</h2>
-        <div className="space-y-4">
-          {recommendations.map(({ item: recommendation }) => (
-            <ItemCard key={recommendation._id} item={recommendation} />
-          ))}
-        </div>
-        </div>
+        <section className="rounded-[32px] bg-white p-6 shadow-soft">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.24em] text-slate-500">Recommendation rationale</p>
+              <h2 className="mt-2 text-2xl font-black text-slate-950">Why you may like this</h2>
+            </div>
+          </div>
+          <div className="mt-6 space-y-3">
+            <div className="rounded-3xl bg-slate-50 p-4 text-sm text-slate-600">Because you viewed electronics and affordable campus gear.</div>
+            <div className="rounded-3xl bg-slate-50 p-4 text-sm text-slate-600">Similar students in your department saved items like this.</div>
+            <div className="rounded-3xl bg-slate-50 p-4 text-sm text-slate-600">Trending in your college marketplace this week.</div>
+          </div>
+        </section>
+
+        <section className="rounded-[32px] bg-white p-6 shadow-soft">
+          <h2 className="text-2xl font-black text-slate-950">Similar products</h2>
+          <div className="mt-4 space-y-4">
+            {recommendations.map(({ item: recommendation }) => (
+              <ItemCard key={recommendation._id} item={recommendation} onWishlistChange={() => {}} />
+            ))}
+          </div>
+        </section>
       </aside>
     </main>
   );

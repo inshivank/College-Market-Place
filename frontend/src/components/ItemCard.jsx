@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
+import RecommendationBadge from "./RecommendationBadge";
 
 function categoryPlaceholder(category = "Others") {
   const palette = {
@@ -14,50 +15,78 @@ function categoryPlaceholder(category = "Others") {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-export default function ItemCard({ item, onWishlistChange }) {
+export default function ItemCard({ item, onWishlistChange, onQuickView }) {
   const { isAuthenticated, user } = useAuth();
   const isWishlisted = item.wishlistedBy?.some((id) => String(id) === String(user?.id));
   const imageUrl = item.images?.[0] || categoryPlaceholder(item.category);
 
+  const badges = [];
+  if (item.recommended || item.views > 100) badges.push({ label: "Recommended", variant: "recommended" });
+  if (item.trending || item.views > 200) badges.push({ label: "Trending", variant: "trending" });
+  if (item.isNew || new Date(item.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) badges.push({ label: "New Listing", variant: "new" });
+  if (item.seller?.verified) badges.push({ label: "Verified Seller", variant: "verified" });
+
   async function toggleWishlist(event) {
     event.preventDefault();
-
     if (!isAuthenticated) {
       return;
     }
-
     await api.post(`/wishlist/${item._id}`);
     onWishlistChange?.();
   }
 
   return (
-    <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-      <Link to={`/items/${item._id}`}>
-        <img src={imageUrl} alt={item.title} className="h-44 w-full object-cover" />
-      </Link>
-      <div className="space-y-3 p-4">
-        <div className="flex items-start justify-between gap-3">
+    <article className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl">
+      <div className="relative">
+        <Link to={`/items/${item._id}`}>
+          <img src={imageUrl} alt={item.title} className="h-56 w-full object-cover transition duration-300 hover:scale-105" />
+        </Link>
+        <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+          {badges.slice(0, 2).map((badge) => (
+            <RecommendationBadge key={badge.label} label={badge.label} variant={badge.variant} />
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={toggleWishlist}
+          disabled={!isAuthenticated}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className={`absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/95 text-slate-800 shadow-sm transition hover:bg-ocean hover:text-white ${!isAuthenticated ? "cursor-not-allowed opacity-70" : ""}`}
+        >
+          {isWishlisted ? "♥" : "♡"}
+        </button>
+      </div>
+
+      <div className="space-y-4 p-5">
+        <div className="space-y-2">
+          <Link to={`/items/${item._id}`} className="text-xl font-black text-slate-950 hover:text-ocean">
+            {item.title}
+          </Link>
+          <p className="text-sm text-slate-500 line-clamp-2">{item.description || "Smart campus listing with fast pickup and strong seller trust."}</p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Link to={`/items/${item._id}`} className="text-lg font-black text-slate-950 hover:text-teal-700">
-              {item.title}
-            </Link>
-            <p className="text-sm text-slate-500">{item.category}</p>
+            <p className="text-2xl font-black text-ocean">₹{Number(item.price).toLocaleString("en-IN")}</p>
+            <p className="text-sm text-slate-500">{item.category} · {item.condition}</p>
           </div>
+          <div className="rounded-3xl bg-slate-100 px-3 py-2 text-xs font-semibold uppercase text-slate-700">{item.seller?.name || "Campus seller"}</div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            onClick={toggleWishlist}
-            disabled={!isAuthenticated}
-            className={`rounded-full px-3 py-1 text-xs font-black ${isWishlisted ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-500"} disabled:cursor-not-allowed disabled:opacity-50`}
-            aria-label="Toggle wishlist"
+            onClick={() => onQuickView?.(item)}
+            className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
           >
-            {isWishlisted ? "Saved" : "Save"}
+            Quick view
           </button>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-black text-teal-700">Rs. {Number(item.price).toLocaleString("en-IN")}</span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold capitalize text-slate-600">
-            {item.condition}
-          </span>
+          <Link
+            to={`/items/${item._id}`}
+            className="rounded-3xl bg-ocean px-4 py-3 text-sm font-black text-white transition hover:bg-ocean-dark"
+          >
+            View details
+          </Link>
         </div>
       </div>
     </article>

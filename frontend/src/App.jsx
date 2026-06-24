@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import FeedbackWidget from "./components/FeedbackWidget";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MarketplaceAssistant from "./components/MarketplaceAssistant";
 import AdminDashboard from "./pages/AdminDashboard";
 import HomePage from "./pages/HomePage";
 import ItemDetailPage from "./pages/ItemDetailPage";
@@ -43,6 +44,7 @@ export default function App() {
         />
       </Routes>
       <FeedbackWidget />
+      <MarketplaceAssistant />
     </>
   );
 }
