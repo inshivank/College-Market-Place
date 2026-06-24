@@ -29,12 +29,6 @@ const itemSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
-  whatsappNumber: {
-    type: String,
-    trim: true,
-    maxlength: [20, "WhatsApp number is too long"],
-    default: ""
-  },
   seller: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
