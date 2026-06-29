@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useMessaging } from "../context/MessagingContext";
 
 export default function Navbar() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, role, user, logout } = useAuth();
   const { unreadCount } = useMessaging();
@@ -35,9 +36,11 @@ export default function Navbar() {
         </form>
 
         <nav className="flex flex-wrap items-center gap-2">
-          <NavLink to="/" className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
-            Browse
-          </NavLink>
+          {location.pathname !== "/" && (
+            <NavLink to="/" className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
+              Browse
+            </NavLink>
+          )}
           {isAuthenticated ? (
             <>
               <NavLink to="/items/new" className="btn-primary">
