@@ -1,22 +1,29 @@
 # College Marketplace
 
-College Marketplace is a full-stack campus buying and selling platform for students. It includes a React frontend, an Express API, MongoDB persistence, JWT authentication, marketplace listings, wishlists, recommendation logic, and admin/manager moderation dashboards.
+College Marketplace is a full-stack campus buying and selling platform that enables students to buy, sell, and discover second-hand items within their college community. The platform features secure authentication, personalized recommendations, wishlists, role-based moderation, and an intuitive dashboard for administrators and managers.
+
+---
 
 ## Features
 
-- User registration and login with JWT authentication
-- Role-based access for users, managers, and admins
-- Marketplace item browsing, search, filters, sorting, and detail pages
-- Authenticated item creation, editing, and deletion
-- Wishlist support
-- Similar item recommendations using TF-IDF and cosine similarity on tags
-- Admin dashboard for stats, users, roles, and item management
+- User registration and login using JWT authentication
+- Role-based access (User, Manager, Admin)
+- Browse marketplace listings with search, filters, and sorting
+- View detailed product pages
+- Create, edit, and delete listings
+- Wishlist functionality
+- TF-IDF and Cosine Similarity based item recommendations
 - Manager dashboard for approving, rejecting, and marking listings as sold
-- Render-ready deployment setup for backend and frontend
+- Admin dashboard for user management, roles, marketplace statistics, and listing moderation
+- Image uploads using Cloudinary
+- MongoDB database integration
+- Render-ready deployment configuration
 
-## Tech Stack
+---
 
-Frontend:
+# Tech Stack
+
+## Frontend
 
 - React
 - Vite
@@ -24,150 +31,345 @@ Frontend:
 - Axios
 - Tailwind CSS
 
-Backend:
+## Backend
 
 - Node.js
-- Express
+- Express.js
 - MongoDB
 - Mongoose
-- JWT
+- JWT Authentication
 - bcryptjs
-- CORS
+- Multer
+- Cloudinary
 - dotenv
-- multer
-- cloudinary
+- CORS
 
-## Project Structure
+---
+
+# Project Structure
 
 ```text
 college-marketplace/
-  backend/
-    middleware/
-    models/
-    routes/
-    Dockerfile
-    .env.example
-    package.json
-    server.js
-  frontend/
-    public/
-      _redirects
-    src/
-      api/
-      components/
-      context/
-      pages/
-    .env.example
-    package.json
-  package.json
-  README.md
+│
+├── backend/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── Dockerfile
+│   ├── .env.example
+│   ├── package.json
+│   └── server.js
+│
+├── frontend/
+│   ├── public/
+│   │   └── _redirects
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   └── pages/
+│   ├── .env.example
+│   └── package.json
+│
+├── package.json
+└── README.md
 ```
 
-## Local Setup
+---
 
-Install all dependencies:
+# Prerequisites
+
+Before running the project, make sure you have the following installed:
+
+- Node.js (v18 or later recommended)
+- npm
+- MongoDB Atlas account (or a local MongoDB instance)
+- Cloudinary account
+
+---
+
+# Installation
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/college-marketplace.git
+```
+
+## 2. Navigate to the Project
+
+```bash
+cd college-marketplace
+```
+
+## 3. Install Dependencies
+
+Install dependencies for both frontend and backend:
 
 ```bash
 npm run install:all
 ```
 
-Create backend environment file:
+Alternatively, install them manually:
+
+### Backend
 
 ```bash
 cd backend
+npm install
+```
+
+### Frontend
+
+```bash
+cd ../frontend
+npm install
+```
+
+---
+
+# Environment Setup
+
+## Backend
+
+Navigate to the backend directory.
+
+```bash
+cd backend
+```
+
+Create a `.env` file.
+
+Linux/Mac:
+
+```bash
 cp .env.example .env
 ```
 
-Create frontend environment file:
+Windows:
 
 ```bash
-cd frontend
-cp .env.example .env
+copy .env.example .env
 ```
 
-Run the backend:
-
-```bash
-npm run dev:backend
-```
-
-Run the frontend in a second terminal:
-
-```bash
-npm run dev:frontend
-```
-
-Local URLs:
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:5000`
-- Health check: `http://localhost:5000/api/health`
-
-## Backend Environment Variables
-
-Create `backend/.env`:
+Update the following variables:
 
 ```env
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/college-marketplace
+
 JWT_SECRET=replace_with_a_secure_secret
+
 PORT=5000
+
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+
 CLOUDINARY_API_KEY=your_cloudinary_api_key
+
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
 CLIENT_URL=http://localhost:5173
 ```
 
-For Render, set `CLIENT_URL` to your deployed frontend URL, for example:
+---
 
-```env
-CLIENT_URL=https://college-marketplace-frontend.onrender.com
+## Frontend
+
+Navigate to the frontend directory.
+
+```bash
+cd frontend
 ```
 
-## Frontend Environment Variables
+Create a `.env` file.
 
-Create `frontend/.env`:
+Linux/Mac:
+
+```bash
+cp .env.example .env
+```
+
+Windows:
+
+```bash
+copy .env.example .env
+```
+
+Add:
 
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
-For Render, set it to your deployed backend API URL:
+---
+
+# Running the Application
+
+### Start the Backend
+
+```bash
+npm run dev:backend
+```
+
+### Start the Frontend
+
+Open a second terminal and run:
+
+```bash
+npm run dev:frontend
+```
+
+---
+
+# Local Development URLs
+
+| Service | URL |
+|----------|-----|
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:5000 |
+| API Health | http://localhost:5000/api/health |
+
+---
+
+# Backend Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `MONGODB_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret key for JWT authentication |
+| `PORT` | Backend server port |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `CLIENT_URL` | Frontend URL |
+
+For production:
+
+```env
+CLIENT_URL=https://college-marketplace-frontend.onrender.com
+```
+
+---
+
+# Frontend Environment Variables
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+For production:
 
 ```env
 VITE_API_URL=https://college-marketplace-backend.onrender.com
 ```
 
-## Render Deployment
+---
 
-### Backend Web Service
+# Render Deployment
 
-1. Create a new Render Web Service.
-2. Connect the GitHub repository.
-3. Set the root directory to `backend`.
-4. Use Node or Docker deployment. The included `backend/Dockerfile` is ready for Docker.
-5. If using Node directly:
-   - Build command: `npm install`
-   - Start command: `npm start`
-6. Add the backend environment variables from the backend section.
-7. Deploy and confirm `/api/health` returns a success response.
+## Backend (Web Service)
 
-### Frontend Static Site
+1. Create a **Render Web Service**.
+2. Connect your GitHub repository.
+3. Set the Root Directory to:
 
-1. Create a new Render Static Site.
+```
+backend
+```
+
+4. Build Command:
+
+```bash
+npm install
+```
+
+5. Start Command:
+
+```bash
+npm start
+```
+
+6. Add all backend environment variables.
+
+7. Deploy.
+
+Verify:
+
+```
+https://your-backend-url.onrender.com/api/health
+```
+
+---
+
+## Frontend (Static Site)
+
+1. Create a **Render Static Site**.
 2. Connect the same GitHub repository.
-3. Set the root directory to `frontend`.
-4. Build command: `npm install && npm run build`
-5. Publish directory: `dist`
-6. Add `VITE_API_URL` with the deployed backend URL.
-7. Deploy the frontend.
+3. Root Directory:
 
-The file `frontend/public/_redirects` is included so React Router routes work after refreshes on Render static hosting.
+```
+frontend
+```
 
-## CORS
+4. Build Command
+
+```bash
+npm install && npm run build
+```
+
+5. Publish Directory
+
+```
+dist
+```
+
+6. Add
+
+```env
+VITE_API_URL=https://your-backend-url.onrender.com
+```
+
+7. Deploy.
+
+The included `frontend/public/_redirects` file ensures React Router works correctly after refreshing routes on Render.
+
+---
+
+# CORS
 
 The backend accepts requests from:
 
-- `http://localhost:5173`
-- The deployed frontend URL configured in `CLIENT_URL`
+- http://localhost:5173
+- The deployed frontend URL specified in `CLIENT_URL`
 
-This allows local development and Render deployment to use the same server code.
+This allows seamless switching between local development and production deployment.
+
+---
+
+# Recommendation System
+
+The platform recommends similar listings using:
+
+- TF-IDF Vectorization
+- Cosine Similarity
+- Item Tags
+
+This enables users to discover related products based on listing metadata.
+
+---
+
+# Future Enhancements
+
+- Real-time chat between buyers and sellers
+- AI-powered product recommendations
+- Price prediction
+- Payment gateway integration
+- Product reporting system
+- Email notifications
+- Order history
+- Seller ratings and reviews
+
+---
+
+# License
+
+This project is intended for educational and learning purposes.
